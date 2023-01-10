@@ -1,8 +1,7 @@
 section .data
-exit_command db "exit"
+exit_command db "exit", 10
 cd_command db "cd "
 prompt db "# ", 0
-dir db "test"
 
 section .bss
 currentDirectory resb 5024
@@ -18,10 +17,10 @@ _start:
 _loop:
 call get_cwd
 
-mov rax, currentDirectory
+lea rax, currentDirectory
 call print
 
-mov rax, prompt
+lea rax, prompt
 call print
 
 call read_command
@@ -54,33 +53,28 @@ mov rbx, 0
 _printLoop:
 inc rax
 inc rbx
-mov cl, [rax]
-cmp cl, 0
+
+cmp byte [rax], 0
 jne _printLoop
- 
+
 mov rax, 1
 mov rdi, 1
 pop rsi
 mov rdx, rbx
 syscall
- 
+
 ret
 
 add_zero_at_end_of_string:
-
 push rax
 mov rbx, 0
 
-_add_zero_at_end_of_string_loop:
-
+_add_zero_at_end_of_stringLoop:
 inc rax
 inc rbx
-mov cl, [rax]
-cmp cl, 10
-jne _add_zero_at_end_of_string_loop
-je _add_zero_at_end_of_string_return_result
 
-_add_zero_at_end_of_string_return_result:
+cmp byte [rax], 10
+jne _add_zero_at_end_of_stringLoop
 
 pop rax
 mov [rax+rbx], byte 0
@@ -90,7 +84,7 @@ ret
 exec_command:
 
 cld
-mov rcx, 4
+mov rcx, 5
 lea     rsi, exit_command
 lea     rdi, command
 repe    cmpsb 
@@ -112,10 +106,9 @@ mov rdi, 0
 syscall
 
 _cd:
-mov rax, [command + 3]
-mov [command_args], rax
 
-mov rax, command_args
+lea rax, command
+add rax, 3
 call add_zero_at_end_of_string
 
 push rax
